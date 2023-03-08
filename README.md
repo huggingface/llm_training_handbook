@@ -8,17 +8,19 @@ If you are not interested in technical details but want more of a detailed overv
 
 note: The list of topics will expand over time - at the moment filling in only a subset
 
-## [Model parallelism](./parallelism)
+## [Model parallelism](./parallelism/)
 
-## [Maximizing throughput](./throughput)
+## [Maximizing throughput](./throughput/)
 
-## [Tensor precision / Data types](./dtype)
+## [Tensor precision / Data types](./dtype/)
 
-## [Training hyper-parameters and model initializations](./hparams)
+## [Training hyper-parameters and model initializations](./hparams/)
 
-## [Instabilities](./instabilities)
+## [Instabilities](./instabilities/)
 
 ## [Debugging software and hardware failures](./debug/)
+
+## [SLURM](./slurm/)
 
 ## [Resources](./resources/)
 
