@@ -19,3 +19,36 @@ To make it easier to compare the two formulas, they can be rewritten as:
 2. `sqrt(0.3333/NHIDDEN)`
 
 Thus for `NHIDDEN=14336` the math was `sqrt(1/(14336*3)) = 0.00482` and that's what we used. It surely wasn't the only reason why we had no stability issues during BLOOM-176B training, but I think it was one of the crucial ones.
+
+
+## Numerical instabilities
+
+Certain mathematical operations could be unstable when dealing with low precision numbers.
+
+For example, please see this very interesting [PyTorch guide on numerical stability](https://pytorch.org/docs/stable/notes/numerical_accuracy.html).
+
+Now let's look at a specific example of this concept in action.
+
+During 104B training experiments where fp16 mixed precision was used - the following improvement was proposed by [Corby Rosset](https://github.com/corbyrosset) to make [self-attention more stable](https://github.com/bigscience-workshop/Megatron-DeepSpeed/pull/118).
+
+Specifically this [line](https://github.com/bigscience-workshop/Megatron-DeepSpeed/blob/c839a8aa30731f71b3738d56009be9668508e366/megatron/model/transformer.py#L303) shows that the `norm_factor` may be multiplied after the Query * Key matrix multiplication. If the dim of Q and K are very large, the output may blow up and the `norm_factor` won't be able to save it.
+
+Proposal: move the `norm_factor` inward, so Q and K are scaled down before matrix multiply:
+```
+        matmul_result = torch.baddbmm(
+            matmul_result,
+            1.0/math.sqrt(self.norm_factor) * query_layer.transpose(0, 1),   # [b * np, sq, hn]
+            1.0/math.sqrt(self.norm_factor) * key_layer.transpose(0, 1).transpose(1, 2),  # [b * np, hn, sk]
+            beta=0.0 if alibi is None else 1.0, alpha=1.0)
+
+        # change view to [b, np, sq, sk]
+        attention_scores = matmul_result.view(*output_size)
+```
+
+To make the operation mathematically equivalent, moving the norm factor inward requires taking sqrt again
+if n is a scalar, A and B matrices:
+```
+n * (A dot B) === (sqrt(n) * A) dot (sqrt(n) * B)
+```
+
+Now A and B dimenstios can be significantly larger.
