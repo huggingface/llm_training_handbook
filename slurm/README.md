@@ -68,16 +68,18 @@ This builds an index of the files under `$WORK` which you can then quickly query
 
 To stop running this job, just move it out of the `$WORK/cron/cron.daily` dir.
 
-Same principle applies for jobs placed into the `$WORK/cron/cron.daily` dir. These are useful for running something every hour.
+The same principle applies to jobs placed into the `$WORK/cron/cron.hourly` dir. These are useful for running something every hour.
 
-Please note that this crontab implementation is approximate, due to various delays in SLURM scheduling they will run approximately every hour and day. You can recode these to ask SLURM to start something at a more precise time if you have to, but most of the time the explained here method works fine.
+Please note that this crontab implementation is approximate timing-wise, due to various delays in SLURM scheduling they will run approximately every hour and every day. You can recode these to ask SLURM to start something at a more precise time if you have to, but most of the time the just presented method works fine.
+
+Additionally, you can code your own variations  to meet specific needs of your project, e.g., every-30min or every-12h jobs.
 
 
 ### 3. Cleanup
 
-Finally, since every job will leave behind a log file (which is useful if for some reason things don't work), you want to create a cronjob to clean up these logs.
+Finally, since every cron launcher job will leave behind a log file (which is useful if for some reason things don't work), you want to create a cronjob to clean up these logs. Otherwise you may run out of inodes - these logs files are tiny, but there could be tens of thousands of those.
 
-You could use something like this:
+You could use something like this in a daily job.
 
 ```
 find $WORK/cron -name "*.out" -mtime +7 -exec rm -f {} +
@@ -88,3 +90,26 @@ Please note that it's set to only delete files that are older than 7 days, in ca
 ### Nuances
 
 The scheduler runs with Unix permissions of the person who launched the SLRUM cron scheduler job and so all other SLURM scripts launched by that cron job.
+
+
+
+
+## Overcoming The lack of group SLURM job ownership
+
+SLURM runs on Unix, but surprisingly its designers haven't adopted the concept of group ownership with regards to SLURM jobs. So if a member of your team started an array of 10 jobs 20h each, and went on vacation - unless you have `sudo` access you now can't do anything to stop those jobs if something is wrong.
+
+I'm yet to find why this is so, but so far we have been using a kill switch workaround. You have to code it in your framework. For example, see how it was implemented in [Megatron-Deepspeed](https://github.com/bigscience-workshop/Megatron-DeepSpeed/blob/e52bdabbde3c6895aceb76c1bced295c2646121f/megatron/training.py#L104) (Meg-DS). The program polls for a pre-configured at start up path on the filesystem and if it finds a file there, it exits.
+
+So if we start Meg-DS with `--kill-switch-path $WORK/tmp/training17-kill-switch` and then at any point we need to kill the SLURM job, we simply do:
+
+```
+touch $WORK/tmp/training17-kill-switch
+```
+and the next time the program gets to check for this file it'll detect the event and will exit voluntarily. If you have a job array, well, you will have to wait until each job starts, detects the kill switch and exits.
+
+Of course, don't forget to remove it when you're done stopping the jobs.
+```
+rm $WORK/tmp/training17-kill-switch
+```
+
+Now, this doesn't always work. If the job is hanging, it'll never come to the point of checking for kill-switch and the only solution here is to contact the sysadmins to kill the job for you. Sometimes if the hanging is a simple case pytorch's distributed setup will typically auto-exit after 30min of preset timeout time, but it doesn't always work.
