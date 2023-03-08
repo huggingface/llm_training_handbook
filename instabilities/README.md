@@ -51,4 +51,12 @@ if n is a scalar, A and B matrices:
 n * (A dot B) === (sqrt(n) * A) dot (sqrt(n) * B)
 ```
 
-Now A and B dimenstios can be significantly larger.
+Now A and B dimensions can be significantly larger.
+
+For CUDA kernel writers [CuBlas](https://docs.nvidia.com/cuda/cublas/index.html)'s `GemmStridedBatchedEx` at the time of this writing has a similar issue. It is defined as:
+
+```
+C+i*strideC=αop(A+i*strideA)op(B+i*strideB)+β(C+i*strideC), for i ∈[0,batchCount−1]
+```
+
+The issue is that `alpha` is multiplied after the matrix-matrix multiplication is done so it can cause instability.
