@@ -1,3 +1,5 @@
+""" License: Apache License 2.0 https://www.apache.org/licenses/LICENSE-2.0.txt """
+
 # If you have ever done multi-gpu work and tried to `print` for debugging you quickly discovered
 # that some messages get interleaved and are impossible to make sense of. Especially so if you're
 # using `print` to debug values.

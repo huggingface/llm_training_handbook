@@ -1,3 +1,5 @@
+""" License: Apache License 2.0 https://www.apache.org/licenses/LICENSE-2.0.txt """
+
 # this version has been derived from @jeffra's gist: https://gist.github.com/jeffra/b5e80466b4c86be00ea3b6f130fb7a36
 # which in turn is derived from https://github.com/NVIDIA/nccl-tests
 #

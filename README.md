@@ -21,3 +21,9 @@ The list of topics will expand over time.
 ## [Debugging software and hardware failures](./debug/)
 
 ## [Resources](./resources/)
+
+## License
+
+The content of this site is distributed under [Attribution-ShareAlike 4.0 International](./LICENSE-CC-BY-SA).
+
+Unless specified otherwise the code in this repo is licensed under [Apache License, Version 2.0](https://www.apache.org/licenses/LICENSE-2.0).

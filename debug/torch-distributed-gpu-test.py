@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+""" License: Apache License 2.0 https://www.apache.org/licenses/LICENSE-2.0.txt """
+
 #
 # This a `torch.distributed` diagnostics script that checks that all GPUs in the cluster (one or
 # many nodes) can talk to each other via nccl and allocate gpu memory.
