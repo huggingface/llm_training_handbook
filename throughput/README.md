@@ -39,6 +39,57 @@ Frameworks that shard weights and optim stages like [Deepspeed](https://github.c
 Of course, an efficient framework will overlap communications and compute, so that while one stage is fetching data, the other stage in parallel runs computations. So as long as the communication overhead is smaller than compute the network requirements are satisfied and don't have to be super fantastic.
 
 
+## TFLOPs as performance metrics
+
+Before you start optimizing the performance of your training setup you need a metric that you can use to see whether the throughput is improving or not. You can measure seconds per iteration, or iterations per second, or some other such timing, but there is a more useful metric that measures TFLOPs.
+
+footnote: TFLOPs: Trillion FLOPs per second - [FLOPS](https://en.wikipedia.org/wiki/FLOPS)
+
+Measuring TFLOPs is superior because without it you don't know whether you are close to the best performance that can be achieved or not. This measurement gives you an indication of how far you're from the peak performance reported by the hardware manufacturer.
+
+In this section I will use BLOOM's training for the examplification. We use 80GB A100 NVIDIA GPUs and we trained in mixed bf16 regime. So let's look at the [A100 spec](https://www.nvidia.com/en-us/data-center/a100/) which tells us:
+
+```
+BFLOAT16 Tensor Core 	312 TFLOPS
+```
+
+Therefore we now know that if we were to only run `matmul` on huge bf16 matrices without copying to and from the device we should get around 312 TFLOPs max.
+
+Practically though, due to disk IO, communications and copying data from gpu memory to gpu computing unit overhead and because we can't do everything in bf16 and at times we have to do math in fp32 (or tf32) we can really expect about half of that. So 155 TFLOPs should be an amazing sustainable throughput for a complex hundreds of GPUs training setup.
+
+When we first started tuning things up we were at <100 TFLOPs and a few weeks later when we launched the training we managed to get 150 TFLOPs.
+
+The important thing to notice here is that we knew that we can't push it further by much and we knew that there was no more point to try and optimize it even more.
+
+So a general rule of thumb - if your training set up gets about 1/2 of advertised peak performance you're doing great. Don't let it stop you though from beating this suggestion and getting even more efficient.
+
+When calculating TFLOPs it's important to remember that the math is different if [Checkpoint activations](#checkpoint-activations) are enabled, since when it's activated more compute is used and it needs to be taken into an account.
+
+for transformer models the following is an estimation formula which slightly under-reports the real TFLOPs:
+
+TFLOPs: `model_size_in_B * 4 * 2 * seqlen * global_batch_size / (time_in_sec_per_interation * total_gpus * 1e3)`
+
+The factor of 4 is when used with activation check-pointing, otherwise it will be 3, but for 100B+ model, activation check-pointing will always be on.
+
+So the `3*2` is often called "model FLOPs" and `4*2` - "hardware FLOPs".
+
+```
+perl -le '$ng=64; $ms=52; $gbs=1024; $sp=127; $seqlen=2048; print $ms*4*2*$seqlen*$gbs / ( $sp * $ng * 1e3)'
+```
+(ng = total gpus, ms = model size in B, gbs = global batch size, sp = throughput in seconds)
+
+same with bash env vars and broken down GBS into mbs*dp*gas (gas=pp_chunks):
+```
+echo "($MSIZE*4*2*SEQLEN*$MICRO_BATCH_SIZE*$DP_SIZE*$GAS)/($THROUGHPUT*$NNODES*4*1000)" | bc -l
+```
+
+The exact formula is in Equation 3 of Section 5.1 of the [Efficient Large-Scale Language Model Training on GPU Clusters Using Megatron-LM](https://arxiv.org/abs/2104.04473) paper. You can see the code [here](https://github.com/bigscience-workshop/Megatron-DeepSpeed/pull/251).
+
+footnote: For Inference only it'd be: `24Bsh^2 + 4𝐵s^2h` floating point operations per layer
+
+
+
+
 ## Checkpoint activations
 
 Enabling checkpoint activations allows one to trade speed for memory. When this feature is activated instead of remembering the outputs of, say, transformer blocks until the backward pass is done, these outputs are dropped. This frees up huge amounts of GPU memory. But, of course, a backward pass is not possible without having the outputs of forward pass, and thus they have to be recalculated.
@@ -58,6 +109,3 @@ XXX
 ### Number/size of Attention heads
 
 XXX
-
-
-### Understanding TFLOPs
