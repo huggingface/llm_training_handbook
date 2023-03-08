@@ -6,15 +6,15 @@ This is technical material suitable for LLM training engineers and operators. Th
 
 If you are not interested in technical details but want more of a detailed overview and concepts please refer to the sister [The Large Language Model Training Playbook](https://github.com/huggingface/large_language_model_training_playbook) instead.
 
-The list of topics will expand over time.
+note: The list of topics will expand over time - at the moment filling in only a subset
 
 ## [Model parallelism](./parallelism)
 
-## [Tensor precision](./dtype)
-
-## [Selecting training hyper-parameters and model initializations](./hparams)
-
 ## [Maximizing throughput](./throughput)
+
+## [Tensor precision / Data types](./dtype)
+
+## [Training hyper-parameters and model initializations](./hparams)
 
 ## [Instabilities](./instabilities)
 
