@@ -39,7 +39,7 @@ Frameworks that shard weights and optim stages like [Deepspeed](https://github.c
 Of course, an efficient framework will overlap communications and compute, so that while one stage is fetching data, the other stage in parallel runs computations. So as long as the communication overhead is smaller than compute the network requirements are satisfied and don't have to be super fantastic.
 
 
-## TFLOPs as performance metrics
+## TFLOPs as a performance metric
 
 Before you start optimizing the performance of your training setup you need a metric that you can use to see whether the throughput is improving or not. You can measure seconds per iteration, or iterations per second, or some other such timing, but there is a more useful metric that measures TFLOPs.
 
@@ -95,6 +95,19 @@ footnote: For Inference only it'd be: `24Bsh^2 + 4𝐵s^2h` floating point opera
 Enabling checkpoint activations allows one to trade speed for memory. When this feature is activated instead of remembering the outputs of, say, transformer blocks until the backward pass is done, these outputs are dropped. This frees up huge amounts of GPU memory. But, of course, a backward pass is not possible without having the outputs of forward pass, and thus they have to be recalculated.
 
 This, of course, can vary from model to model, but typically one pays with about 20-25% decrease in throughput, but since a huge amount of gpu memory is liberated, one can now increase the batch size per gpu and thus overall improve the effective throughput of the system.
+
+
+
+## Gradient accumulation
+
+Depending on a situation using a large gradient accumulation can increase the throughput, even though it's only the optimizer `step` that's skipped except at the boundary of the gradient accumulation, it can be quite a significant saving. e.g. in this particular small setup I clocked 20-30% speed up:
+
+- [A100](https://github.com/huggingface/transformers/issues/15026#issuecomment-1004592231)
+- [RTX-3090](https://github.com/huggingface/transformers/issues/14608#issuecomment-1004392537)
+
+
+When using Pipeline parallelism a very large Gradient Accumulation is a must to keep the [pipeline's bubble to the minimum]( https://huggingface.co/docs/transformers/main/perf_train_gpu_many#naive-model-parallelism-vertical-and-pipeline-parallelism).
+
 
 
 
