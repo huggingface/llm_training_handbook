@@ -38,6 +38,14 @@ Frameworks that shard weights and optim stages like [Deepspeed](https://github.c
 
 Of course, an efficient framework will overlap communications and compute, so that while one stage is fetching data, the other stage in parallel runs computations. So as long as the communication overhead is smaller than compute the network requirements are satisfied and don't have to be super fantastic.
 
+To get reasonable GPU throughput when training at scale (64+GPUs) with DeepSpeed ZeRO Stage 3:
+
+1. 100Gbps is not enough
+2. 200-400 Gbps is ok
+3. 800-1000 Gbps is ideal
+
+[full details](https://github.com/microsoft/DeepSpeed/issues/2928#issuecomment-1463041491)
+
 
 ## TFLOPs as a performance metric
 
