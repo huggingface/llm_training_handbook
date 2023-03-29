@@ -71,7 +71,7 @@ The important thing to notice here is that we knew that we can't push it further
 
 So a general rule of thumb - if your training set up gets about 1/2 of advertised peak performance you're doing great. Don't let it stop you though from beating this suggestion and getting even more efficient.
 
-When calculating TFLOPs it's important to remember that the math is different if [Checkpoint activations](#checkpoint-activations) are enabled, since when it's activated more compute is used and it needs to be taken into an account.
+When calculating TFLOPs it's important to remember that the math is different if [Gradient checkpointing](#gradient-checkpointing) are enabled, since when it's activated more compute is used and it needs to be taken into an account.
 
 for transformer models the following is an estimation formula which slightly under-reports the real TFLOPs:
 
@@ -98,11 +98,17 @@ footnote: For Inference only it'd be: `24Bsh^2 + 4𝐵s^2h` floating point opera
 
 
 
-## Checkpoint activations
+## Gradient checkpointing
 
-Enabling checkpoint activations allows one to trade speed for memory. When this feature is activated instead of remembering the outputs of, say, transformer blocks until the backward pass is done, these outputs are dropped. This frees up huge amounts of GPU memory. But, of course, a backward pass is not possible without having the outputs of forward pass, and thus they have to be recalculated.
+This is only relevant for training.
 
-This, of course, can vary from model to model, but typically one pays with about 20-25% decrease in throughput, but since a huge amount of gpu memory is liberated, one can now increase the batch size per gpu and thus overall improve the effective throughput of the system.
+Enabling gradient checkpointing allows one to trade speed for GPU memory. When this feature is activated instead of remembering the outputs of, say, transformer blocks until the backward pass is done, these outputs are dropped. This frees up huge amounts of GPU memory. But, of course, a backward pass is not possible without having the outputs of forward pass, and thus they have to be recalculated.
+
+This, of course, can vary from model to model, but typically one pays with about 20-25% decrease in throughput, but since a huge amount of gpu memory is liberated, one can now increase the batch size per gpu and thus overall improve the effective throughput of the system. In some cases this allows you to double or quadruple the batch size if you were already able to do a small batch size w/o OOM.
+
+Activation checkpointing and gradient checkpointing are 2 terms for the same methodology.
+
+For example, in HF Transformers models you do `model.gradient_checkpointing_enable()` to activate it in your trainer or if you HF Trainer then you'd activate it with `--gradient_checkpointing 1`.
 
 
 
