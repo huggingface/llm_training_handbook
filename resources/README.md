@@ -27,3 +27,5 @@ The listing is in no particular order other than the year.
 ### 2023
 
 - HF m4 (Flamingo repro) (2023): [Learning log](https://docs.google.com/document/d/1ZNGyVWYFUbzV0xuei4SED2QAakGjMpaaQALcKYQm46U/edit) | [Training Logbook](https://github.com/huggingface/m4-logbook/)
+
+- BloombergGPT - section C in [BloombergGPT: A Large Language Model for Finance](https://arxiv.org/abs/2303.17564)
