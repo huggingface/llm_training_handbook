@@ -26,6 +26,6 @@ The listing is in no particular order other than the year.
 
 ### 2023
 
-- HuggingFace m4 80B multimodal (Flamingo repro) (2023): [Learning log](https://docs.google.com/document/d/1ZNGyVWYFUbzV0xuei4SED2QAakGjMpaaQALcKYQm46U/edit) | [Training Logbook](https://github.com/huggingface/m4-logbook/tree/main/tr-190-80b)
+- HuggingFace m4 80B multimodal (Flamingo repro) (2023): [Learning log](https://docs.google.com/document/d/1ZNGyVWYFUbzV0xuei4SED2QAakGjMpaaQALcKYQm46U/edit) | [Training Logbook](https://github.com/huggingface/m4-logs/blob/master/tr-190-80b/chronicles.md)
 
 - BloombergGPT 50B LLM - section C in [BloombergGPT: A Large Language Model for Finance](https://arxiv.org/abs/2303.17564)
